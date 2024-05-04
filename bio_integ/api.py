@@ -69,6 +69,7 @@ def create_checkin(employee,time,location,log_type):
 			echeck.time = time
 			echeck.log_type = log_type
 			echeck.device_id = location
+			echeck.shift = frappe.db.get_value("Employee",employee,"default_shift")
 			echeck.save()
 			frappe.db.commit()
 
