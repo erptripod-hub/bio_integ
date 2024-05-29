@@ -27,33 +27,33 @@ def execute():
 
 	data = response.json()
 	checkinout = data['data']
-	print(len(data['data']))
 	log_type = ""
 	l = 0
 	code = []
-	for c in range(len(checkinout)):
-		if not checkinout[c]["emp_code"] in code:
-			code.append(checkinout[c]["emp_code"])
-		if checkinout[c]['punch_state'] in ["0","1","255"]:
+	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
+
+	for c in range(len(filtered_checkin)):
+		if not filtered_checkin[c]["emp_code"] in code:
+			code.append(filtered_checkin[c]["emp_code"])
+		if filtered_checkin[c]['punch_state'] in ["0","1","255"]:
 			punch_dict = {"0":"IN","1":"OUT","255":""}
-			employee = frappe.db.get_value("Employee",{"attendance_device_id":checkinout[c]["emp_code"]},"name")
-			if not frappe.db.exists("Employee",{"attendance_device_id":checkinout[c]["emp_code"]}):
-				if not frappe.db.exists("Bio logs",{"code":checkinout[c]["emp_code"]}):
+			employee = frappe.db.get_value("Employee",{"attendance_device_id":filtered_checkin[c]["emp_code"]},"name")
+			if not frappe.db.exists("Employee",{"attendance_device_id":filtered_checkin[c]["emp_code"]}):
+				if not frappe.db.exists("Bio logs",{"code":filtered_checkin[c]["emp_code"]}):
 					log = frappe.new_doc("Bio logs")
-					log.code = checkinout[c]["emp_code"]
-					log.log = "code {} is not attached to any employee".format(checkinout[c]["emp_code"])
+					log.code = filtered_checkin[c]["emp_code"]
+					log.log = "code {} is not attached to any employee".format(filtered_checkin[c]["emp_code"])
 					log.save()
 			else:
 				l+= 1
-				time = checkinout[c]['punch_time']
-				location = checkinout[c]['terminal_alias']
-				create_checkin(employee,time,location,punch_dict[checkinout[c]['punch_state']])
+				time = filtered_checkin[c]['punch_time']
+				location = filtered_checkin[c]['terminal_alias']
+				create_checkin(employee,time,location,punch_dict[filtered_checkin[c]['punch_state']])
 				shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
 				for row in shift_list:
 					frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin', now_datetime())
 					frappe.db.commit()
 
-		print(checkinout[c]['punch_time'])
 	return data
 
 
@@ -62,16 +62,13 @@ def create_checkin(employee,time,location,log_type):
 	if frappe.db.exists("Employee Checkin",{"time":time,"employee":employee}):
 		pass
 	else:
-		start_time = datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')
-		device_time = datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
-		if device_time > start_time:
-			echeck.employee = employee
-			echeck.time = time
-			echeck.log_type = log_type
-			echeck.device_id = location
-			echeck.shift = frappe.db.get_value("Employee",employee,"default_shift")
-			echeck.save()
-			frappe.db.commit()
+		echeck.employee = employee
+		echeck.time = time
+		echeck.log_type = log_type
+		echeck.device_id = location
+		echeck.shift = frappe.db.get_value("Employee",employee,"default_shift")
+		echeck.save()
+		frappe.db.commit()
 
 
 def update_start_time():
