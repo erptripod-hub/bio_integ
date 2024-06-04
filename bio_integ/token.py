@@ -15,7 +15,7 @@ def get_token():
 		"username": settings.username,
 		"password": get_decrypted_password("Biometric Settings","Biometric Settings","password")
 	}
-	response = requests.post(settings.token_url,data=json.dumps(data), headers=headers,verify=false)
+	response = requests.post(settings.token_url,data=json.dumps(data), headers=headers,verify=False)
 	token = json.loads(response.text)
 	return "JWT " + token['token']
 
