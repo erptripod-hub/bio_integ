@@ -23,15 +23,16 @@ param = "?start_time={}".format(settings.start_time)
 def execute():
 	response = requests.get(settings.url+param,headers=headers,
 									params=payload,
-									timeout=settings.timeout)
+									timeout=settings.timeout,verify=False)
 
 	data = response.json()
 	checkinout = data['data']
 	log_type = ""
 	l = 0
 	code = []
+	print(len(checkinout))
 	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
-
+	print(len(filtered_checkin))
 	for c in range(len(filtered_checkin)):
 		if not filtered_checkin[c]["emp_code"] in code:
 			code.append(filtered_checkin[c]["emp_code"])
@@ -54,7 +55,7 @@ def execute():
 					frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin', now_datetime())
 					frappe.db.commit()
 
-	return data
+	# return data
 
 
 def create_checkin(employee,time,location,log_type):
