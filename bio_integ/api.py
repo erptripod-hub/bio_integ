@@ -50,10 +50,10 @@ def execute():
 				time = filtered_checkin[c]['punch_time']
 				location = filtered_checkin[c]['terminal_alias']
 				create_checkin(employee,time,location,punch_dict[filtered_checkin[c]['punch_state']])
-				shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
-				for row in shift_list:
-					frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin', now_datetime())
-					frappe.db.commit()
+				# shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
+				# for row in shift_list:
+				# 	frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin', now_datetime())
+				# 	frappe.db.commit()
 
 	# return data
 
