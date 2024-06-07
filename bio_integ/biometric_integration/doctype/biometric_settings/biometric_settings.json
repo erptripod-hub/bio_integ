@@ -15,6 +15,7 @@
   "update_key",
   "key",
   "timeout",
+  "update_last_checkin",
   "username_and_password_section",
   "username",
   "column_break_10",
@@ -85,12 +86,18 @@
    "fieldtype": "Float",
    "label": "Timeout",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "update_last_checkin",
+   "fieldtype": "Check",
+   "label": "Update Last Checkin in Shift Type"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2023-06-23 12:34:36.977115",
+ "modified": "2024-06-07 11:14:14.194859",
  "modified_by": "Administrator",
  "module": "Biometric Integration",
  "name": "Biometric Settings",
@@ -108,5 +115,6 @@
   }
  ],
  "sort_field": "modified",
- "sort_order": "DESC"
+ "sort_order": "DESC",
+ "states": []
 }
