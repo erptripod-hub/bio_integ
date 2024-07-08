@@ -30,9 +30,7 @@ def execute():
 	log_type = ""
 	l = 0
 	code = []
-	print(len(checkinout))
 	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
-	print(len(filtered_checkin))
 	for c in range(len(filtered_checkin)):
 		if not filtered_checkin[c]["emp_code"] in code:
 			code.append(filtered_checkin[c]["emp_code"])
@@ -52,9 +50,10 @@ def execute():
 				create_checkin(employee,time,location,punch_dict[filtered_checkin[c]['punch_state']])
 				if settings.update_last_checkin:
 					shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
+					print(shift_list)
 					for row in shift_list:
-						now =  now_datetime()
-						frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin', now.strftime("%d-%m-%Y %H:%M:%S"))
+						print(row[0])
+						frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin',now_datetime())
 						frappe.db.commit()
 
 	# return data
