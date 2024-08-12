@@ -85,7 +85,7 @@
    "fieldname": "timeout",
    "fieldtype": "Float",
    "label": "Timeout",
-   "read_only": 1
+   "read_only": 0
   },
   {
    "default": "0",
