@@ -20,6 +20,22 @@ param = "?start_time={}".format(settings.start_time)
 
 
 @frappe.whitelist()
+def pull_filtered_checkin(filters, param=""):
+	doc = frappe.get_doc("Pull Checkin")
+	filters = frappe._dict(json.loads(filters))
+	if not param:
+		if filters.attendance_device_id:
+			param = "?start_time={}&end_time={}&emp_code={}".format(filters.start_time,filters.to_time, filters.attendance_device_id)
+		else:
+			param = "?start_time={}&end_time={}".format(filters.start_time, filters.to_time)
+	response = requests.get(settings.url+param,headers=headers, params=payload, timeout=settings.timeout,verify=False)
+	data = response.json()
+	checkinout = data['data']
+	doc.add_comment("Comment",f"Adding {len(checkinout)} record(s)") 
+	add_employee_checkins(checkinout)
+
+
+@frappe.whitelist()
 def execute():
 	response = requests.get(settings.url+param,headers=headers,
 									params=payload,
@@ -27,10 +43,13 @@ def execute():
 
 	data = response.json()
 	checkinout = data['data']
+	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
+	add_employee_checkins(filtered_checkin)
+
+def add_employee_checkins(filtered_checkin):
 	log_type = ""
 	l = 0
 	code = []
-	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
 	for c in range(len(filtered_checkin)):
 		if not filtered_checkin[c]["emp_code"] in code:
 			code.append(filtered_checkin[c]["emp_code"])
@@ -48,15 +67,13 @@ def execute():
 				time = filtered_checkin[c]['punch_time']
 				location = filtered_checkin[c]['terminal_alias']
 				create_checkin(employee,time,location,punch_dict[filtered_checkin[c]['punch_state']])
-				if settings.update_last_checkin:
-					shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
-					print(shift_list)
-					for row in shift_list:
-						print(row[0])
-						frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin',now_datetime())
-						frappe.db.commit()
-
-	# return data
+	if settings.update_last_checkin:
+		shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
+		print(shift_list)
+		for row in shift_list:
+			print(row[0])
+			frappe.set_value('Shift Type', row[0], 'last_sync_of_checkin',now_datetime())
+			frappe.db.commit()
 
 
 def create_checkin(employee,time,location,log_type):
