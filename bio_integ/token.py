@@ -13,7 +13,8 @@ def get_token():
 	} 
 	data = {
 		"username": settings.username,
-		"password": get_decrypted_password("Biometric Settings","Biometric Settings","password")
+		"password": get_decrypted_password("Biometric Settings","Biometric Settings","password"),
+		"company":"Kaddah"
 	}
 	response = requests.post(settings.token_url,data=json.dumps(data), headers=headers,verify=False)
 	token = json.loads(response.text)
