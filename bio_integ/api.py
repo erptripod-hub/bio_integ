@@ -99,8 +99,7 @@ def update_start_time():
 
 @frappe.whitelist()
 def update_key():
-	settings.key = get_token()
-	settings.save()
+	settings.db_set("key", get_token())
 	return get_token()
 		
 
