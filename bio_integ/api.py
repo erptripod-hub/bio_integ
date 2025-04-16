@@ -14,37 +14,55 @@ headers = {
 		"Authorization": settings.key,
 }
 payload = {
-	"page_size": settings.size,
+	# "page_size": settings.size,
 }
-param = "?start_time={}".format(settings.start_time)
+param = f"?start_time={settings.start_time}&page_size={settings.size}"
 
 
 @frappe.whitelist()
-def pull_filtered_checkin(filters, param=""):
+def pull_filtered_checkin(filters, param="", next=None):
 	doc = frappe.get_doc("Pull Checkin")
-	filters = frappe._dict(json.loads(filters))
+	loaded_filters = frappe._dict(json.loads(filters))
 	if not param:
-		if filters.attendance_device_id:
-			param = "?start_time={}&end_time={}&emp_code={}".format(filters.start_time,filters.to_time, filters.attendance_device_id)
+		if loaded_filters.attendance_device_id:
+			param = "?page_size={}&start_time={}&end_time={}&emp_code={}".format(settings.size, loaded_filters.start_time,loaded_filters.to_time, loaded_filters.attendance_device_id)
 		else:
-			param = "?start_time={}&end_time={}".format(filters.start_time, filters.to_time)
-	response = requests.get(settings.url+param,headers=headers, params=payload, timeout=settings.timeout,verify=False)
-	data = response.json()
-	checkinout = data['data']
-	doc.add_comment("Comment",f"Adding {len(checkinout)} record(s)") 
-	add_employee_checkins(checkinout)
+			param = "?page_size={}&start_time={}&end_time={}".format(settings.size, loaded_filters.start_time, loaded_filters.to_time)
+	if next:
+		data = send_request(next)
+	else:
+		data = send_request(settings.url+param)
+	if data:
+		if data["data"]:
+			checkinout = data['data']
+			doc.add_comment("Comment",f"Adding {len(checkinout)} record(s)") 
+			add_employee_checkins(checkinout)
+			if data["next"]:
+				pull_filtered_checkin(filters, param=param, next=data["next"])
+	else:
+		frappe.throw(str(data))
 
 
 @frappe.whitelist()
-def execute():
-	response = requests.get(settings.url+param,headers=headers,
-									params=payload,
-									timeout=settings.timeout,verify=False)
+def execute(next=None):
+	if next:
+		data = send_request(next)
+	else:
+		data = send_request(settings.url+param)
+	if data:
+		if data["data"]:
+			checkinout = data['data']
+			filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
+			add_employee_checkins(filtered_checkin)
+			if data["next"]:
+				execute(next=data["next"])
+	else:
+		frappe.throw(str(data))
 
-	data = response.json()
-	checkinout = data['data']
-	filtered_checkin = [d for d in checkinout if datetime.strptime(d['punch_time'], '%Y-%m-%d %H:%M:%S') >= datetime.strptime(settings.start_time, '%Y-%m-%d %H:%M:%S')]
-	add_employee_checkins(filtered_checkin)
+def send_request(url):
+	print(url)
+	response = requests.get(url, headers=headers, params=payload, timeout=settings.timeout, verify=False)
+	return response.json()
 
 def add_employee_checkins(filtered_checkin):
 	log_type = ""
