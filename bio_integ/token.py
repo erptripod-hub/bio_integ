@@ -8,6 +8,7 @@ from frappe.utils.password import get_decrypted_password
 settings = frappe.get_doc("Biometric Settings")
 
 def get_token():
+	settings = frappe.get_doc("Biometric Settings")
 	headers = {
 		"Content-Type": "application/json",
 	} 
