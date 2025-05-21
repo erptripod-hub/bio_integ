@@ -21,6 +21,7 @@ param = f"?start_time={settings.start_time}&page_size={settings.size}"
 
 @frappe.whitelist()
 def pull_filtered_checkin(filters, param="", next=None):
+	settings = frappe.get_doc("Biometric Settings")
 	doc = frappe.get_doc("Pull Checkin")
 	loaded_filters = frappe._dict(json.loads(filters))
 	if not param:
@@ -48,6 +49,7 @@ def execute(next=None):
 	if next:
 		data = send_request(next)
 	else:
+		settings = frappe.get_doc("Biometric Settings")
 		data = send_request(settings.url+param)
 	if data:
 		if data["data"]:
@@ -65,6 +67,7 @@ def send_request(url):
 	return response.json()
 
 def add_employee_checkins(filtered_checkin):
+	settings = frappe.get_doc("Biometric Settings")
 	log_type = ""
 	l = 0
 	code = []
