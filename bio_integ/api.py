@@ -46,10 +46,10 @@ def pull_filtered_checkin(filters, param="", next=None):
 
 @frappe.whitelist()
 def execute(next=None):
+	settings = frappe.get_doc("Biometric Settings")
 	if next:
 		data = send_request(next)
 	else:
-		settings = frappe.get_doc("Biometric Settings")
 		data = send_request(settings.url+param)
 	if data:
 		if data["data"]:
