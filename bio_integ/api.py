@@ -63,6 +63,7 @@ def execute(next=None):
 
 def send_request(url):
 	print(url)
+	headers = { "Content-Type": "application/json", "Authorization": settings.key,}
 	response = requests.get(url, headers=headers, params=payload, timeout=settings.timeout, verify=False)
 	return response.json()
 
