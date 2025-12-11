@@ -91,7 +91,7 @@ def add_employee_checkins(filtered_checkin):
 				try:
 					create_checkin(employee,time,location,punch_dict[filtered_checkin[c]['punch_state']])
 				except Exception as e:
-					frappe.log_error(f"Error adding employee checkin \n {e}")
+					frappe.log_error(f"Error adding employee checkin for employee {employee}")
 	if settings.update_last_checkin:
 		shift_list = frappe.get_all('Shift Type', 'name', {'enable_auto_attendance':'1'}, as_list=True)
 		print(shift_list)
