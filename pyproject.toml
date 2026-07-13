@@ -14,3 +14,6 @@ build-backend = "flit_core.buildapi"
 
 [tool.flit.module]
 name = "bio_integ"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0,<16.0.0"
